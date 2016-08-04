@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "I8Beef.Denon.TestClient", "I8Beef.Denon.TestClient\I8Beef.Denon.TestClient.csproj", "{263B5577-2722-478C-AC74-4DC2D8639B91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "I8Beef.Denon", "I8Beef.Denon\I8Beef.Denon.csproj", "{2613D905-5F91-4A60-B262-513B30933BCD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{263B5577-2722-478C-AC74-4DC2D8639B91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{263B5577-2722-478C-AC74-4DC2D8639B91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{263B5577-2722-478C-AC74-4DC2D8639B91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{263B5577-2722-478C-AC74-4DC2D8639B91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2613D905-5F91-4A60-B262-513B30933BCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2613D905-5F91-4A60-B262-513B30933BCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2613D905-5F91-4A60-B262-513B30933BCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2613D905-5F91-4A60-B262-513B30933BCD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,6 +1,6 @@
 ﻿namespace I8Beef.Denon
 {
-    public static class Commands
+    public static class CommandStrings
     {
         /// <summary>
         /// Values: standby, on

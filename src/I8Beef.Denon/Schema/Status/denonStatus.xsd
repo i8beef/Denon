@@ -1,0 +1,98 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="item">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Zone">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Power">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="InputFuncList">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="RenameSource">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="value" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="value"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="SourceDelete">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="InputFuncSelect">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="VolumeDisplay">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="RestorerMode">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="SurrMode">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="MasterVolume">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Mute">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Model">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="value"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -10,8 +10,8 @@ namespace I8Beef.Denon.TestClient
             var host = "192.168.1.117";
 
             var client = new Client(host);
-            var config = Task.Run(() => client.GetDeviceInfo()).Result;
-            //client.SendCommand(Commands.MainZoneInputSelect, "SAT").Wait();
+            var config = Task.Run(() => client.GetStatus()).Result;
+            // client.SendCommand(Commands.MainZoneInputSelect, "SAT").Wait();
 
             Console.ReadKey();
         }

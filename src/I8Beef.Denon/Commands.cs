@@ -1,6 +1,6 @@
 ﻿namespace I8Beef.Denon
 {
-    public static class CommandStrings
+    public static class Commands
     {
         /// <summary>
         /// Values: standby, on
@@ -66,22 +66,34 @@
         /// <summary>
         /// Values: on, off
         /// </summary>
-        public static string SecondZonePower = "MainZone/index.put.asp?cmd0=PutZone_OnOff/{0}&cmd1=aspMainZone_WebUpdateStatus/&ZoneName=ZONE2";
+        /// <remarks>
+        /// Takes secondary argument to specify zone name to update, e.g. ZONE2.
+        /// </remarks>
+        public static string SecondZonePower = "MainZone/index.put.asp?cmd0=PutZone_OnOff/{0}&cmd1=aspMainZone_WebUpdateStatus/&ZoneName={1}";
 
         /// <summary>
         /// Values: %3C, %3E
         /// </summary>
-        public static string SecondZoneVolumeAdjust = "MainZone/index.put.asp?cmd0=PutMasterVolumeBtn/{0}&ZoneName=ZONE2";
+        /// <remarks>
+        /// Takes secondary argument to specify zone name to update, e.g. ZONE2.
+        /// </remarks>
+        public static string SecondZoneVolumeAdjust = "MainZone/index.put.asp?cmd0=PutMasterVolumeBtn/{0}&ZoneName={1}";
 
         /// <summary>
         /// Values: on, off
         /// </summary>
-        public static string SecondZoneVolumeMute = "MainZone/index.put.asp?cmd0=PutVolumeMute/{0}&cmd1=aspMainZone_WebUpdateStatus/&ZoneName=ZONE2";
+        /// <remarks>
+        /// Takes secondary argument to specify zone name to update, e.g. ZONE2.
+        /// </remarks>
+        public static string SecondZoneVolumeMute = "MainZone/index.put.asp?cmd0=PutVolumeMute/{0}&cmd1=aspMainZone_WebUpdateStatus/&ZoneName={1}";
 
         /// <summary>
         /// Values: BD, CD, DVD, SAT, MPLAY, GAME, TUNER, M-XPORT, NET/USB, FAVORITES, INTERNET+RADIO, 
         /// MEDIA+SERVER, USB/IPOD, FLICKER, PANDORA, NAPSTER, RHAPSODY
         /// </summary>
-        public static string SecondZoneInputSelect = "MainZone/index.put.asp?cmd0=PutZone_InputFunction/{0}&cmd1=aspMainZone_WebUpdateStatus/&ZoneName=ZONE2";
+        /// <remarks>
+        /// Takes secondary argument to specify zone name to update, e.g. ZONE2.
+        /// </remarks>
+        public static string SecondZoneInputSelect = "MainZone/index.put.asp?cmd0=PutZone_InputFunction/{0}&cmd1=aspMainZone_WebUpdateStatus/&ZoneName={1}";
     }
 }

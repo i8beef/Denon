@@ -42,21 +42,17 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="Commands.cs" />
-    <Compile Include="Commands\Command.cs" />
-    <Compile Include="Commands\StandBy.cs" />
-    <Compile Include="Schema\DeviceInfo\denon.Designer.cs" />
+    <Compile Include="DenonConfig.cs" />
+    <Compile Include="Entities\MainStatus.cs" />
+    <Compile Include="Entities\StatusLite.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Schema\Status\denonStatus.Designer.cs" />
+    <Compile Include="Schema\DeviceInfo\DeviceInfo.cs" />
+    <Compile Include="Schema\MainZoneStatus\MainZoneStatus.cs" />
+    <Compile Include="Schema\SecondaryZoneStatus\SecondaryZoneStatus.cs" />
+    <Compile Include="Schema\Status\Status.cs" />
     <Compile Include="XmlSerializer.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Schema\DeviceInfo\denon.xsd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Schema\Status\denonStatus.xsd">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

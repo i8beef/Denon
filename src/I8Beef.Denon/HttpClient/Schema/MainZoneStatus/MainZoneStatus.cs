@@ -1,7 +1,7 @@
 ﻿using System.Xml.Serialization;
 using System.Collections.Generic;
 
-namespace I8Beef.Denon.Schema.MainZoneStatus
+namespace I8Beef.Denon.HttpClient.Schema.MainZoneStatus
 {
     [XmlRoot(ElementName = "Zone")]
     public class Zone

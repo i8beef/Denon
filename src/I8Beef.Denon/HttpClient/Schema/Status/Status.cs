@@ -1,7 +1,7 @@
 ﻿using System.Xml.Serialization;
 using System.Collections.Generic;
 
-namespace I8Beef.Denon.Schema.Status
+namespace I8Beef.Denon.HttpClient.Schema.Status
 {
     [XmlRoot(ElementName = "FriendlyName")]
     public class FriendlyName

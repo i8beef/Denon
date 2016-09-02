@@ -1,10 +1,9 @@
 ﻿using I8Beef.Denon.Entities;
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace I8Beef.Denon
+namespace I8Beef.Denon.HttpClient
 {
     public class Client
     {
@@ -59,7 +58,7 @@ namespace I8Beef.Denon
         /// <returns></returns>
         public async Task<Schema.DeviceInfo.Device_Info> GetDenonDeviceInfo()
         {
-            using (var client = new HttpClient())
+            using (var client = new System.Net.Http.HttpClient())
             {
                 var response = await client.GetAsync("http://" + _host + "/goform/Deviceinfo.xml").ConfigureAwait(false);
                 var responseString = await response.Content.ReadAsStringAsync();
@@ -79,7 +78,7 @@ namespace I8Beef.Denon
         /// <returns></returns>
         public async Task<Schema.Status.Item> GetDenonStatus()
         {
-            using (var client = new HttpClient())
+            using (var client = new System.Net.Http.HttpClient())
             {
                 var response = await client.GetAsync("http://" + _host + "/goform/formMainZone_MainZoneXml.xml").ConfigureAwait(false);
                 var responseString = await response.Content.ReadAsStringAsync();
@@ -99,7 +98,7 @@ namespace I8Beef.Denon
         /// <returns></returns>
         public async Task<Schema.MainZoneStatus.Item> GetDenonMainZoneStatus()
         {
-            using (var client = new HttpClient())
+            using (var client = new System.Net.Http.HttpClient())
             {
                 var response = await client.GetAsync("http://" + _host + "/goform/formMainZone_MainZoneXmlStatus.xml").ConfigureAwait(false);
                 var responseString = await response.Content.ReadAsStringAsync();
@@ -139,7 +138,7 @@ namespace I8Beef.Denon
         /// <returns></returns>
         public async Task<Schema.SecondaryZoneStatus.Item> GetDenonSecondaryZonesStatus(int zoneId)
         {
-            using (var client = new HttpClient())
+            using (var client = new System.Net.Http.HttpClient())
             {
                 var response = await client.GetAsync("http://" + _host + string.Format("/goform/formZone{0}_Zone{0}XmlStatusLite.xml", zoneId)).ConfigureAwait(false);
                 var responseString = await response.Content.ReadAsStringAsync();
@@ -158,9 +157,9 @@ namespace I8Beef.Denon
         /// <returns></returns>
         public async Task SendCommand(string command, params string[] arguments)
         {
-            using (var client = new HttpClient())
+            using (var client = new System.Net.Http.HttpClient())
             {
-                var response = await client.GetAsync("http://" + _host +"/" + string.Format(command, arguments));
+                var response = await client.GetAsync("http://" + _host + "/" + string.Format(command, arguments));
                 var responseString = await response.Content.ReadAsStringAsync();
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                     throw new Exception("Invalid status code received: " + response.StatusCode);

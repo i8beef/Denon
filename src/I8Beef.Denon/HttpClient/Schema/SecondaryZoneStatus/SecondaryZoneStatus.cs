@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace I8Beef.Denon.Schema.SecondaryZoneStatus
+namespace I8Beef.Denon.HttpClient.Schema.SecondaryZoneStatus
 {
     [XmlRoot(ElementName = "Power")]
     public class Power

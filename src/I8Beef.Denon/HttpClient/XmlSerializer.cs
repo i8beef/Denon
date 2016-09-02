@@ -2,7 +2,7 @@
 using System.Text;
 using System.Xml;
 
-namespace I8Beef.Denon
+namespace I8Beef.Denon.HttpClient
 {
     public static class XmlSerializer<TType> where TType : class
     {

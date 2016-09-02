@@ -1,6 +1,6 @@
-﻿namespace I8Beef.Denon
+﻿namespace I8Beef.Denon.HttpClient
 {
-    public static class Commands
+    public static class HttpCommand
     {
         /// <summary>
         /// Values: standby, on

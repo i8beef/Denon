@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace I8Beef.Denon.TelnetClient
 {
-    public class Client : IDisposable
+    public class Client : IClient
     {
         private bool _disposed;
         private readonly object _writeLock = new object();

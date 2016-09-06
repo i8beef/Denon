@@ -19,7 +19,7 @@ namespace I8Beef.Denon.Commands
 
         public static Command Parse(string commandString)
         {
-            var matches = Regex.Match(commandString, @"^PW(.*)$");
+            var matches = Regex.Match(commandString, @"^PW(ON|STANDBY|\?)$");
             if (!matches.Success)
                 throw new ArgumentException("Command string not recognized: " + commandString);
 

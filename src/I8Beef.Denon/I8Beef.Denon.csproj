@@ -62,7 +62,6 @@
     <Compile Include="Exceptions\ConnectionException.cs" />
     <Compile Include="Exceptions\UnrecognizedMessageException.cs" />
     <Compile Include="HttpClient\Client.cs" />
-    <Compile Include="HttpClient\HttpCommand.cs" />
     <Compile Include="DenonConfig.cs" />
     <Compile Include="Entities\MainStatus.cs" />
     <Compile Include="Entities\StatusLite.cs" />

@@ -29,7 +29,7 @@ namespace I8Beef.Denon.Commands
 
         public static Command Parse(string commandString)
         {
-            var matches = Regex.Match(commandString, @"^MV(.*)$");
+            var matches = Regex.Match(commandString, @"^MV(UP|DOWN|\d+|\?)$");
             if (!matches.Success)
                 throw new ArgumentException("Command string not recognized: " + commandString);
 

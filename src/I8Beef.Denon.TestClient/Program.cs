@@ -1,4 +1,5 @@
-﻿using I8Beef.Denon.TelnetClient;
+﻿using I8Beef.Denon.Commands;
+using I8Beef.Denon.TelnetClient;
 using System;
 using System.Threading.Tasks;
 
@@ -19,27 +20,35 @@ namespace I8Beef.Denon.TestClient
             {
                 client.MessageSent += (o, e) => { Console.WriteLine("Message sent: " + e.Message); };
                 client.MessageReceived += (o, e) => { Console.WriteLine("Message received: " + e.Message); };
-                client.EventReceived += (o, e) => { Console.WriteLine($"Event received: {e.Code} {e.Parameter} {e.Value}"); };
+                client.EventReceived += (o, e) => { Console.WriteLine($"Event received: {e.GetType()} {e.Code} {e.Value}"); };
 
                 client.Connect();
 
-                var command = "";
-                while (command != "exit")
+                var commandString = "";
+                while (commandString != "exit")
                 {
-                    if (!string.IsNullOrEmpty(command))
+                    if (!string.IsNullOrEmpty(commandString))
                     {
-                        if (command .EndsWith("?"))
+                        var command = CommandFactory.GetCommand(commandString);
+                        if (command != null)
                         {
-                            var response = await client.SendQueryAsync(command);
-                            Console.WriteLine($"New value for {response.Code} {response.Parameter}: {response.Value}");
+                            if (commandString.EndsWith("?"))
+                            {
+                                var response = await client.SendQueryAsync(command);
+                                Console.WriteLine($"New value for {response.GetType()}: {response.Value}");
+                            }
+                            else
+                            {
+                                await client.SendCommandAsync(command);
+                            }
                         }
                         else
                         {
-                            await client.SendCommandAsync(command);
+                            Console.WriteLine("Command not recognized");
                         }
                     }
 
-                    command = Console.ReadLine();
+                    commandString = Console.ReadLine();
                 }
             }
         }

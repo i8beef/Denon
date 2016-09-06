@@ -48,20 +48,16 @@ namespace I8Beef.Denon.HttpClient
         /// <summary>
         /// The event that is raised when and event is received from the Denon unit.
         /// </summary>
-        public event EventHandler<DenonMessage> EventReceived;
+        public event EventHandler<Command> EventReceived;
 
         /// <summary>
         /// Send command to the Denon.
         /// </summary>
         /// <param name="command"></param>
         /// <returns>Awaitable Task.</returns>
-        public async Task SendCommandAsync(string command)
+        public async Task SendCommandAsync(Command command)
         {
-            // TODO: Parse the command
-            var arguments = "";
-
-            // Make call
-            await FireAndForgetAsync(command, arguments).ConfigureAwait(false);
+            await FireAndForgetAsync(command).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -69,12 +65,46 @@ namespace I8Beef.Denon.HttpClient
         /// </summary>
         /// <param name="command"></param>
         /// <returns>The response.</returns>
-        public async Task<DenonMessage> SendQueryAsync(string command)
+        public async Task<Command> SendQueryAsync(Command command)
         {
-            // TODO: Parse the command
-            var arguments = "";
+            if (command is PowerCommand)
+                return new PowerCommand { Value =  _status.Power ? "ON" : "OFF" };
 
-            return new DenonMessage();
+            if (command is VolumeCommand)
+                return new VolumeCommand { Value = _status.Volume.ToString() };
+
+            if (command is MuteCommand)
+                return new MuteCommand { Value = _status.Mute ? "ON" : "OFF" };
+
+            if (command is InputCommand)
+                return new InputCommand { Value = _status.Input };
+
+            if (command is SurroundModeCommand)
+                return new SurroundModeCommand { Value = _status.SurroundMode };
+
+            //if (command is TunerFrequencyCommand)
+            //    return new TunerFrequencyCommand { Value = _status.Volume.ToString() };
+
+            //if (command is TunerModeCommand)
+            //    return new TunerModeCommand { Value = _status.Volume.ToString() };
+
+            if (command is ZoneCommand)
+            {
+                var zoneCommand = (ZoneCommand)command;
+                if (command is ZonePowerCommand)
+                    return new ZonePowerCommand { ZoneId = zoneCommand.ZoneId, Value = _status.SecondaryZoneStatus[$"ZONE{zoneCommand.ZoneId}"].Power ? "ON" : "OFF" };
+
+                if (command is ZoneVolumeCommand)
+                    return new ZoneVolumeCommand { ZoneId = zoneCommand.ZoneId, Value = _status.SecondaryZoneStatus[$"ZONE{zoneCommand.ZoneId}"].Volume.ToString() };
+
+                if (command is ZoneMuteCommand)
+                    return new ZoneMuteCommand { ZoneId = zoneCommand.ZoneId, Value = _status.SecondaryZoneStatus[$"ZONE{zoneCommand.ZoneId}"].Mute ? "ON" : "OFF" };
+
+                if (command is ZoneInputCommand)
+                    return new ZoneInputCommand { ZoneId = zoneCommand.ZoneId, Value = _status.SecondaryZoneStatus[$"ZONE{zoneCommand.ZoneId}"].Input };
+            }
+
+            return null;
         }
 
         #region Denon Queries
@@ -203,13 +233,12 @@ namespace I8Beef.Denon.HttpClient
         /// Sends specified command to the device.
         /// </summary>
         /// <param name="command">The command URL to execute (unformatted)</param>
-        /// <param name="argument">Arguments to be used in command format.</param>
         /// <returns></returns>
-        private async Task FireAndForgetAsync(string command, params string[] arguments)
+        private async Task FireAndForgetAsync(Command command)
         {
             using (var client = new System.Net.Http.HttpClient())
             {
-                var request = "http://" + _host + "/" + string.Format(command, arguments);
+                var request = "http://" + _host + "/" + string.Format(command.GetHttpCommand());
                 var response = await client.GetAsync(request).ConfigureAwait(false);
                 MessageSent?.Invoke(this, new MessageSentEventArgs(request));
 
@@ -325,49 +354,49 @@ namespace I8Beef.Denon.HttpClient
         /// <param name="status1">First status.</param>
         /// <param name="status2">Second status.</param>
         /// <returns>List of changes.</returns>
-        private IList<DenonMessage> CompareStatusObjects(MainStatus status1, MainStatus status2)
+        private IList<Command> CompareStatusObjects(MainStatus status1, MainStatus status2)
         {
-            var updates = new List<DenonMessage>();
+            var updates = new List<Command>();
 
             // Power: PW
             if (status1.Power != status2.Power)
-                updates.Add(new DenonMessage { Code = "PW", Parameter = status2.Power ? "ON" : "OFF", Value = status2.Power ? "ON" : "OFF" });
+                updates.Add(new PowerCommand { Value = status2.Power ? "ON" : "OFF" });
 
             // Volume: MV
             if (status1.Volume != status2.Volume)
-                updates.Add(new DenonMessage { Code = "MV", Parameter = status2.Volume.ToString(), Value = status2.Volume.ToString() });
+                updates.Add(new VolumeCommand { Value = status2.Volume.ToString() });
 
             // Mute: MU
             if (status1.Mute != status2.Mute)
-                updates.Add(new DenonMessage { Code = "MU", Parameter = status2.Mute ? "ON" : "OFF", Value = status2.Mute ? "ON" : "OFF" });
+                updates.Add(new MuteCommand { Value = status2.Mute ? "ON" : "OFF" });
 
             // Input: SI
             if (status1.Input != status2.Input)
-                updates.Add(new DenonMessage { Code = "SI", Parameter = status2.Input, Value = status2.Input });
+                updates.Add(new InputCommand {  Value = status2.Input });
 
             // Surround mode: MS
             if (status1.SurroundMode != status2.SurroundMode)
-                updates.Add(new DenonMessage { Code = "MS", Parameter = status2.SurroundMode, Value = status2.SurroundMode });
+                updates.Add(new SurroundModeCommand { Value = status2.SurroundMode });
 
             foreach (var zone in status1.SecondaryZoneStatus)
             {
-                var zoneNumber = zone.Key.Substring(4);
+                var zoneNumber = int.Parse(zone.Key.Substring(4));
 
                 // Zone power: Z#
                 if (status1.SecondaryZoneStatus[zone.Key].Power != status2.SecondaryZoneStatus[zone.Key].Power)
-                    updates.Add(new DenonMessage { Code = $"Z{zoneNumber}", Parameter = status2.SecondaryZoneStatus[zone.Key].Power ? "ON" : "OFF", Value = status2.SecondaryZoneStatus[zone.Key].Power ? "ON" : "OFF" });
+                    updates.Add(new ZonePowerCommand { ZoneId = zoneNumber, Value = status2.SecondaryZoneStatus[zone.Key].Power ? "ON" : "OFF" });
 
                 // Zone input: Z#
                 if (status1.SecondaryZoneStatus[zone.Key].Input != status2.SecondaryZoneStatus[zone.Key].Input)
-                    updates.Add(new DenonMessage { Code = $"Z{zoneNumber}", Parameter = status2.SecondaryZoneStatus[zone.Key].Input, Value = status2.SecondaryZoneStatus[zone.Key].Input });
+                    updates.Add(new ZoneInputCommand { ZoneId = zoneNumber, Value = status2.SecondaryZoneStatus[zone.Key].Input });
 
                 // Zone volume: Z#
                 if (status1.SecondaryZoneStatus[zone.Key].Volume != status2.SecondaryZoneStatus[zone.Key].Volume)
-                    updates.Add(new DenonMessage { Code = $"Z{zoneNumber}", Parameter = status2.SecondaryZoneStatus[zone.Key].Volume.ToString(), Value = status2.SecondaryZoneStatus[zone.Key].Volume.ToString() });
+                    updates.Add(new ZoneVolumeCommand { ZoneId = zoneNumber, Value = status2.SecondaryZoneStatus[zone.Key].Volume.ToString() });
 
                 // Zone input: Z#MU
                 if (status1.SecondaryZoneStatus[zone.Key].Mute != status2.SecondaryZoneStatus[zone.Key].Mute)
-                    updates.Add(new DenonMessage { Code = $"Z{zoneNumber}MU", Parameter = status2.SecondaryZoneStatus[zone.Key].Mute ? "ON" : "OFF", Value = status2.SecondaryZoneStatus[zone.Key].Mute ? "ON" : "OFF" });
+                    updates.Add(new ZoneMuteCommand { ZoneId = zoneNumber, Value = status2.SecondaryZoneStatus[zone.Key].Mute ? "ON" : "OFF" });
             }
 
             return updates;

@@ -31,21 +31,21 @@ namespace I8Beef.Denon
         /// <summary>
         /// The event that is raised when and event is received from the Denon unit.
         /// </summary>
-        event EventHandler<DenonMessage> EventReceived;
+        event EventHandler<Command> EventReceived;
 
         /// <summary>
         /// Send command to the Denon.
         /// </summary>
         /// <param name="command"></param>
         /// <returns>Awaitable Task.</returns>
-        Task SendCommandAsync(string command);
+        Task SendCommandAsync(Command command);
 
         /// <summary>
         /// Send command to the Denon.
         /// </summary>
         /// <param name="command"></param>
         /// <returns>The response.</returns>
-        Task<DenonMessage> SendQueryAsync(string command);
+        Task<Command> SendQueryAsync(Command command);
 
         /// <summary>
         /// Connect to Denon.

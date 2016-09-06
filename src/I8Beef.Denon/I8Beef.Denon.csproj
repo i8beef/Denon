@@ -40,7 +40,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\DenonMessage.cs" />
+    <Compile Include="Commands\CommandFactory.cs" />
+    <Compile Include="Commands\ZoneCommand.cs" />
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\MenuCommand.cs" />
+    <Compile Include="Commands\ZoneVolumeCommand.cs" />
+    <Compile Include="Commands\ZoneMuteCommand.cs" />
+    <Compile Include="Commands\ZoneInputCommand.cs" />
+    <Compile Include="Commands\ZonePowerCommand.cs" />
+    <Compile Include="Commands\TunerModeCommand.cs" />
+    <Compile Include="Commands\TunerFrequencyCommand.cs" />
+    <Compile Include="Commands\SurroundModeCommand.cs" />
+    <Compile Include="Commands\InputCommand.cs" />
+    <Compile Include="Commands\VolumeCommand.cs" />
+    <Compile Include="Commands\MuteCommand.cs" />
+    <Compile Include="Commands\PowerCommand.cs" />
     <Compile Include="IClient.cs" />
     <Compile Include="TelnetClient\TelnetCommand.cs" />
     <Compile Include="Events\MessageReceivedEventArgs.cs" />

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace I8Beef.Denon.Entities
+namespace I8Beef.Denon.HttpClient
 {
-    public class MainStatus
+    internal class MainStatus
     {
         public MainStatus()
         {

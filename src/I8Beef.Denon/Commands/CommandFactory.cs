@@ -10,7 +10,12 @@ namespace I8Beef.Denon.Commands
                 return PowerCommand.Parse(commandString);
 
             if (commandString.StartsWith("MV"))
+            {
+                if (!commandString.StartsWith("MVMAX"))
+                    return null;
+
                 return VolumeCommand.Parse(commandString);
+            }
 
             if (commandString.StartsWith("MU"))
                 return MuteCommand.Parse(commandString);

@@ -4,7 +4,7 @@ using System.Xml;
 
 namespace I8Beef.Denon.HttpClient
 {
-    public static class XmlSerializer<TType> where TType : class
+    internal static class XmlSerializer<TType> where TType : class
     {
         /// <summary>
         /// Serializes an object to XML

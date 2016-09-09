@@ -1,5 +1,4 @@
 ﻿using I8Beef.Denon.Commands;
-using I8Beef.Denon.TelnetClient;
 using System;
 using System.Threading.Tasks;
 
@@ -16,10 +15,14 @@ namespace I8Beef.Denon.TestClient
         {
             var host = "192.168.1.117";
 
-            using (var client = new Client(host))
+            Console.Write("Use (H)TTP client or (T)CP client? ");
+            var clientType = Console.ReadKey().KeyChar;
+            Console.WriteLine();
+
+            using (var client = GetClient(clientType, host))
             {
-                client.MessageSent += (o, e) => { Console.WriteLine("Message sent: " + e.Message); };
-                client.MessageReceived += (o, e) => { Console.WriteLine("Message received: " + e.Message); };
+                //client.MessageSent += (o, e) => { Console.WriteLine("Message sent: " + e.Message); };
+                //client.MessageReceived += (o, e) => { Console.WriteLine("Message received: " + e.Message); };
                 client.EventReceived += (o, e) => { Console.WriteLine($"Event received: {e.GetType()} {e.Code} {e.Value}"); };
 
                 client.Connect();
@@ -48,9 +51,18 @@ namespace I8Beef.Denon.TestClient
                         }
                     }
 
+                    Console.Write("Enter command: ");
                     commandString = Console.ReadLine();
                 }
             }
+        }
+
+        private static IClient GetClient(char type, string host)
+        {
+            if (type == 'h')
+                return new HttpClient.Client(host);
+            else
+                return new TelnetClient.Client(host);
         }
     }
 }

@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace I8Beef.Denon.Entities
+﻿namespace I8Beef.Denon.HttpClient
 {
-    public class StatusLite
+    internal class StatusLite
     {
         public bool Power { get; set; }
         public decimal Volume { get; set; }

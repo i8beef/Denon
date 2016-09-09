@@ -24,16 +24,19 @@ namespace I8Beef.Denon.Commands
 
         public override string GetTelnetCommand()
         {
-            return $"{Code}{Value}";
+            return $"{Code}{Value.Replace(".", "")}";
         }
 
         public static Command Parse(string commandString)
         {
-            var matches = Regex.Match(commandString, @"^MV(UP|DOWN|\d+|\?)$");
+            var matches = Regex.Match(commandString, @"^MV(UP|DOWN|\d\d\d?|\?)$");
             if (!matches.Success)
                 throw new ArgumentException("Command string not recognized: " + commandString);
 
             var value = matches.Groups[1].Value;
+
+            if (value.Length == 3)
+                value = value.Substring(0, 2) + "." + value.Substring(2, 1);
 
             return new VolumeCommand { Value = value };
         }

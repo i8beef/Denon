@@ -1,5 +1,4 @@
 ﻿using I8Beef.Denon.Commands;
-using I8Beef.Denon.Entities;
 using I8Beef.Denon.Events;
 using System;
 using System.Collections.Generic;
@@ -67,6 +66,9 @@ namespace I8Beef.Denon.HttpClient
         /// <returns>The response.</returns>
         public async Task<Command> SendQueryAsync(Command command)
         {
+            if (_status == null)
+                await RefreshStatus().ConfigureAwait(false);
+
             if (command is PowerCommand)
                 return new PowerCommand { Value =  _status.Power ? "ON" : "OFF" };
 
@@ -124,7 +126,7 @@ namespace I8Beef.Denon.HttpClient
                 var response = await client.GetAsync(request).ConfigureAwait(false);
                 MessageSent?.Invoke(this, new MessageSentEventArgs(request));
 
-                var responseString = await response.Content.ReadAsStringAsync();
+                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
 
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -149,7 +151,7 @@ namespace I8Beef.Denon.HttpClient
                 var response = await client.GetAsync(request).ConfigureAwait(false);
                 MessageSent?.Invoke(this, new MessageSentEventArgs(request));
 
-                var responseString = await response.Content.ReadAsStringAsync();
+                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
 
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -174,7 +176,7 @@ namespace I8Beef.Denon.HttpClient
                 var response = await client.GetAsync(request).ConfigureAwait(false);
                 MessageSent?.Invoke(this, new MessageSentEventArgs(request));
 
-                var responseString = await response.Content.ReadAsStringAsync();
+                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
 
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -197,7 +199,7 @@ namespace I8Beef.Denon.HttpClient
             var result = new Dictionary<int, Schema.SecondaryZoneStatus.Item>();
             for (var i = 2; i <= zoneCount + 1; i++)
             {
-                result.Add(i, await GetDenonSecondaryZonesStatus(i));
+                result.Add(i, await GetDenonSecondaryZonesStatus(i).ConfigureAwait(false));
             }
 
             return result;
@@ -219,7 +221,7 @@ namespace I8Beef.Denon.HttpClient
                 var response = await client.GetAsync(request).ConfigureAwait(false);
                 MessageSent?.Invoke(this, new MessageSentEventArgs(request));
 
-                var responseString = await response.Content.ReadAsStringAsync();
+                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
 
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -242,7 +244,7 @@ namespace I8Beef.Denon.HttpClient
                 var response = await client.GetAsync(request).ConfigureAwait(false);
                 MessageSent?.Invoke(this, new MessageSentEventArgs(request));
 
-                var responseString = await response.Content.ReadAsStringAsync();
+                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
 
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -299,52 +301,61 @@ namespace I8Beef.Denon.HttpClient
         {
             try
             {
-                // Make all of the calls to get current status
-                var status = new MainStatus();
-
-                var mainZoneStatusTask = GetDenonMainZoneStatus();
-                var secondaryZoneStatusTask = GetAllDenonSecondaryZonesStatus(1);
-                await Task.WhenAll(mainZoneStatusTask, secondaryZoneStatusTask);
-
-                var mainZoneStatus = await mainZoneStatusTask;
-                var secondaryZoneStatus = await secondaryZoneStatusTask;
-
-                status.Power = mainZoneStatus.Power.Value.ToUpper() == "ON";
-                status.Volume = 80 + decimal.Parse(mainZoneStatus.MasterVolume.Value);
-                status.Mute = mainZoneStatus.Mute.Value.ToUpper() == "ON";
-                status.Input = mainZoneStatus.InputFuncSelect.Value;
-                status.SurroundMode = mainZoneStatus.SurrMode.Value;
-
-                foreach (var zone in secondaryZoneStatus)
-                {
-                    status.SecondaryZoneStatus.Add("ZONE" + zone.Key, new StatusLite
-                    {
-                        Power = zone.Value.Power.Value.ToUpper() == "ON",
-                        Volume = 80 + decimal.Parse(zone.Value.MasterVolume.Value),
-                        Mute = zone.Value.Mute.Value.ToUpper() == "ON",
-                        Input = zone.Value.InputFuncSelect.Value
-                    });
-                }
-
-                // Compare to current cached status
-                var updates = CompareStatusObjects(_status, status);
-
-                // If updated, publish changes
-                if (updates.Count > 0)
-                {
-                    foreach (var update in updates)
-                    {
-                        EventReceived?.Invoke(this, update);
-                    }
-
-                    _status = status;
-                }
+                await RefreshStatus(true).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Error?.Invoke(this, new ErrorEventArgs(ex));
                 Timer timer = (Timer)sender;
                 timer.Stop();
+            }
+        }
+
+        private async Task RefreshStatus(bool publishChanges = false)
+        {
+            // Make all of the calls to get current status
+            var status = new MainStatus();
+
+            var mainZoneStatusTask = GetDenonMainZoneStatus();
+            var secondaryZoneStatusTask = GetAllDenonSecondaryZonesStatus(1);
+            await Task.WhenAll(mainZoneStatusTask, secondaryZoneStatusTask).ConfigureAwait(false);
+
+            var mainZoneStatus = await mainZoneStatusTask.ConfigureAwait(false);
+            var secondaryZoneStatus = await secondaryZoneStatusTask.ConfigureAwait(false);
+
+            status.Power = mainZoneStatus.Power.Value.ToUpper() == "ON";
+            status.Volume = 80 + decimal.Parse(mainZoneStatus.MasterVolume.Value);
+            status.Mute = mainZoneStatus.Mute.Value.ToUpper() == "ON";
+            status.Input = mainZoneStatus.InputFuncSelect.Value;
+            status.SurroundMode = mainZoneStatus.SurrMode.Value;
+
+            foreach (var zone in secondaryZoneStatus)
+            {
+                status.SecondaryZoneStatus.Add("ZONE" + zone.Key, new StatusLite
+                {
+                    Power = zone.Value.Power.Value.ToUpper() == "ON",
+                    Volume = 80 + decimal.Parse(zone.Value.MasterVolume.Value),
+                    Mute = zone.Value.Mute.Value.ToUpper() == "ON",
+                    Input = zone.Value.InputFuncSelect.Value
+                });
+            }
+
+            // Initialize state
+            if (_status == null)
+                _status = status;
+
+            // Compare to current cached status
+            var updates = CompareStatusObjects(_status, status);
+
+            // If updated, publish changes
+            if (publishChanges && updates.Count > 0)
+            {
+                foreach (var update in updates)
+                {
+                    EventReceived?.Invoke(this, update);
+                }
+
+                _status = status;
             }
         }
 

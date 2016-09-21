@@ -28,7 +28,7 @@ namespace I8Beef.Denon.Commands
 
             var value = matches.Groups[2].Value;
 
-            return new ZonePowerCommand { ZoneId = int.Parse(matches.Groups[1].Value), Value = value };
+            return new ZoneInputCommand { ZoneId = int.Parse(matches.Groups[1].Value), Value = value };
         }
     }
 }

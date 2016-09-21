@@ -44,7 +44,7 @@ namespace I8Beef.Denon.Commands
             if (value.Length == 3)
                 value = value.Substring(0, 2) + "." + value.Substring(2, 1);
 
-            return new ZonePowerCommand { ZoneId = int.Parse(matches.Groups[1].Value), Value = value };
+            return new ZoneVolumeCommand { ZoneId = int.Parse(matches.Groups[1].Value), Value = value };
         }
     }
 }

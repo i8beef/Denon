@@ -35,7 +35,7 @@ namespace I8Beef.Denon.Commands
 
             var value = matches.Groups[1].Value;
 
-            return new SurroundModeCommand { Value = value };
+            return new TunerFrequencyCommand { Value = value };
         }
     }
 }

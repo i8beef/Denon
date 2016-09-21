@@ -11,7 +11,7 @@ namespace I8Beef.Denon.Commands
 
             if (commandString.StartsWith("MV"))
             {
-                if (!commandString.StartsWith("MVMAX"))
+                if (commandString.StartsWith("MVMAX"))
                     return null;
 
                 return VolumeCommand.Parse(commandString);

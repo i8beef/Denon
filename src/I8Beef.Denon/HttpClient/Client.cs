@@ -1,13 +1,16 @@
-﻿using I8Beef.Denon.Commands;
-using I8Beef.Denon.Events;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
+using I8Beef.Denon.Commands;
+using I8Beef.Denon.Events;
 
 namespace I8Beef.Denon.HttpClient
 {
+    /// <summary>
+    /// HTTP implementation of Denon <see cref="IClient"/>.
+    /// </summary>
     public class Client : IClient
     {
         private bool _disposed;
@@ -18,59 +21,46 @@ namespace I8Beef.Denon.HttpClient
         private Timer _refresh;
         private int _refreshInterval;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Client"/> class.
+        /// </summary>
+        /// <param name="host">Host address for HTTP client.</param>
+        /// <param name="refreshInterval">Refresh interval for client.</param>
         public Client(string host, int refreshInterval = 30000)
         {
             _host = host;
             _refreshInterval = refreshInterval;
         }
 
-        /// <summary>
-        /// Connected.
-        /// </summary>
-        public bool Connected { get; private set; }
-
-        /// <summary>
-        /// The event that is raised when an unrecoverable error condition occurs.
-        /// </summary>
+        /// <inheritdoc/>
         public event EventHandler<ErrorEventArgs> Error;
 
-        /// <summary>
-        /// The event that is raised when messages are received.
-        /// </summary>
+        /// <inheritdoc/>
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
-        /// <summary>
-        /// The event that is raised when messages are sent.
-        /// </summary>
+        /// <inheritdoc/>
         public event EventHandler<MessageSentEventArgs> MessageSent;
 
-        /// <summary>
-        /// The event that is raised when and event is received from the Denon unit.
-        /// </summary>
-        public event EventHandler<Command> EventReceived;
+        /// <inheritdoc/>
+        public event EventHandler<CommandEventArgs> EventReceived;
 
-        /// <summary>
-        /// Send command to the Denon.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns>Awaitable Task.</returns>
+        /// <inheritdoc/>
+        public bool Connected { get; private set; }
+
+        /// <inheritdoc/>
         public async Task SendCommandAsync(Command command)
         {
             await FireAndForgetAsync(command).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Send command to the Denon.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns>The response.</returns>
+        /// <inheritdoc/>
         public async Task<Command> SendQueryAsync(Command command)
         {
             if (_status == null)
                 await RefreshStatus().ConfigureAwait(false);
 
             if (command is PowerCommand)
-                return new PowerCommand { Value =  _status.Power ? "ON" : "OFF" };
+                return new PowerCommand { Value = _status.Power ? "ON" : "OFF" };
 
             if (command is VolumeCommand)
                 return new VolumeCommand { Value = _status.Volume.ToString() };
@@ -84,15 +74,16 @@ namespace I8Beef.Denon.HttpClient
             if (command is SurroundModeCommand)
                 return new SurroundModeCommand { Value = _status.SurroundMode };
 
-            //if (command is TunerFrequencyCommand)
-            //    return new TunerFrequencyCommand { Value = _status.Volume.ToString() };
+            /*
+            if (command is TunerFrequencyCommand)
+                return new TunerFrequencyCommand { Value = _status.Volume.ToString() };
 
-            //if (command is TunerModeCommand)
-            //    return new TunerModeCommand { Value = _status.Volume.ToString() };
+            if (command is TunerModeCommand)
+                return new TunerModeCommand { Value = _status.Volume.ToString() };
+            */
 
-            if (command is ZoneCommand)
+            if (command is ZoneCommand zoneCommand)
             {
-                var zoneCommand = (ZoneCommand)command;
                 if (command is ZonePowerCommand)
                     return new ZonePowerCommand { ZoneId = zoneCommand.ZoneId, Value = _status.SecondaryZoneStatus[$"ZONE{zoneCommand.ZoneId}"].Power ? "ON" : "OFF" };
 
@@ -117,7 +108,7 @@ namespace I8Beef.Denon.HttpClient
         /// <remarks>
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
-        /// <returns></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task<Schema.DeviceInfo.Device_Info> GetDenonDeviceInfo()
         {
             using (var client = new System.Net.Http.HttpClient())
@@ -142,7 +133,7 @@ namespace I8Beef.Denon.HttpClient
         /// <remarks>
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
-        /// <returns></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task<Schema.Status.Item> GetDenonStatus()
         {
             using (var client = new System.Net.Http.HttpClient())
@@ -167,7 +158,7 @@ namespace I8Beef.Denon.HttpClient
         /// <remarks>
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
-        /// <returns></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task<Schema.MainZoneStatus.Item> GetDenonMainZoneStatus()
         {
             using (var client = new System.Net.Http.HttpClient())
@@ -193,7 +184,7 @@ namespace I8Beef.Denon.HttpClient
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
         /// <param name="zoneCount">Number of secondary zones to try and fetch (default 1).</param>
-        /// <returns></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task<IDictionary<int, Schema.SecondaryZoneStatus.Item>> GetAllDenonSecondaryZonesStatus(int zoneCount = 1)
         {
             var result = new Dictionary<int, Schema.SecondaryZoneStatus.Item>();
@@ -212,7 +203,7 @@ namespace I8Beef.Denon.HttpClient
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
         /// <param name="zoneId">Zone ID to fetch status for.</param>
-        /// <returns></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task<Schema.SecondaryZoneStatus.Item> GetDenonSecondaryZonesStatus(int zoneId)
         {
             using (var client = new System.Net.Http.HttpClient())
@@ -235,7 +226,7 @@ namespace I8Beef.Denon.HttpClient
         /// Sends specified command to the device.
         /// </summary>
         /// <param name="command">The command URL to execute (unformatted)</param>
-        /// <returns></returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task FireAndForgetAsync(Command command)
         {
             using (var client = new System.Net.Http.HttpClient())
@@ -292,11 +283,11 @@ namespace I8Beef.Denon.HttpClient
         }
 
         /// <summary>
-        /// Heartbeat ping. Failure will result in the heartbeat being stopped, which will 
+        /// Heartbeat ping. Failure will result in the heartbeat being stopped, which will
         /// make any future calls throw an exception as the heartbeat indicator will be disabled.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">Event sender.</param>
+        /// <param name="e"><see cref="ElapsedEventArgs"/>.</param>
         private async void RefreshAsync(object sender, ElapsedEventArgs e)
         {
             try
@@ -311,6 +302,11 @@ namespace I8Beef.Denon.HttpClient
             }
         }
 
+        /// <summary>
+        /// Refreshes the current Denon status.
+        /// </summary>
+        /// <param name="publishChanges">Indiactes if changes should be published or not.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task RefreshStatus(bool publishChanges = false)
         {
             // Make all of the calls to get current status
@@ -331,13 +327,14 @@ namespace I8Beef.Denon.HttpClient
 
             foreach (var zone in secondaryZoneStatus)
             {
-                status.SecondaryZoneStatus.Add("ZONE" + zone.Key, new StatusLite
+                var statusLite = new StatusLite
                 {
                     Power = zone.Value.Power.Value.ToUpper() == "ON",
                     Volume = 80 + decimal.Parse(zone.Value.MasterVolume.Value),
                     Mute = zone.Value.Mute.Value.ToUpper() == "ON",
                     Input = zone.Value.InputFuncSelect.Value
-                });
+                };
+                status.SecondaryZoneStatus.Add($"ZONE{zone.Key}", statusLite);
             }
 
             // Initialize state
@@ -352,7 +349,7 @@ namespace I8Beef.Denon.HttpClient
             {
                 foreach (var update in updates)
                 {
-                    EventReceived?.Invoke(this, update);
+                    EventReceived?.Invoke(this, new CommandEventArgs(update));
                 }
 
                 _status = status;
@@ -383,7 +380,7 @@ namespace I8Beef.Denon.HttpClient
 
             // Input: SI
             if (status1.Input != status2.Input)
-                updates.Add(new InputCommand {  Value = status2.Input });
+                updates.Add(new InputCommand { Value = status2.Input });
 
             // Surround mode: MS
             if (status1.SurroundMode != status2.SurroundMode)
@@ -427,12 +424,10 @@ namespace I8Beef.Denon.HttpClient
         }
 
         /// <summary>
-		/// Releases all resources used by the current instance of the XmppIm
-		/// class, optionally disposing of managed resource.
-		/// </summary>
-		/// <param name="disposing">true to dispose of managed resources, otherwise
-		/// false.</param>
-		protected virtual void Dispose(bool disposing)
+        /// Releases all resources used by the current instance of the XmppIm class, optionally disposing of managed resource.
+        /// </summary>
+        /// <param name="disposing">true to dispose of managed resources, otherwise false.</param>
+        protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
             {

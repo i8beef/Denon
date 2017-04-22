@@ -2,8 +2,16 @@
 
 namespace I8Beef.Denon.Commands
 {
-    public class CommandFactory
+    /// <summary>
+    /// Command factory class.
+    /// </summary>
+    public static class CommandFactory
     {
+        /// <summary>
+        /// Gets the <see cref="Command"/> encoded by given command string.
+        /// </summary>
+        /// <param name="commandString">The command string to parse.</param>
+        /// <returns>The <see cref="Command"/> encoded by given command string.</returns>
         public static Command GetCommand(string commandString)
         {
             if (commandString.StartsWith("PW"))

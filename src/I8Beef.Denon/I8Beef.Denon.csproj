@@ -22,6 +22,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet />
     <DocumentationFile>bin\Debug\I8Beef.Denon.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,6 +33,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet />
     <DocumentationFile>bin\Release\I8Beef.Denon.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Label="I8Beef.CodeAnalysis.RuleSet">
     <RunCodeAnalysis>true</RunCodeAnalysis>

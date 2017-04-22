@@ -1,7 +1,4 @@
-﻿using I8Beef.Denon.Commands;
-using I8Beef.Denon.Events;
-using I8Beef.Denon.Exceptions;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -9,68 +6,61 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using I8Beef.Denon.Commands;
+using I8Beef.Denon.Events;
+using I8Beef.Denon.Exceptions;
 
 namespace I8Beef.Denon.TelnetClient
 {
+    /// <summary>
+    /// Telnet implementation of Denon <see cref="IClient"/>.
+    /// </summary>
     public class Client : IClient
     {
-        private bool _disposed;
+        // A lookup to correlate request and responses
+        private readonly IDictionary<string, TaskCompletionSource<Command>> _resultTaskCompletionSources = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
+
         private readonly object _writeLock = new object();
+        private bool _disposed;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private string _host;
         private TcpClient _client;
         private NetworkStream _stream;
 
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-        // A lookup to correlate request and responses
-        private readonly IDictionary<string, TaskCompletionSource<Command>> _resultTaskCompletionSources = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Client"/> class.
+        /// </summary>
+        /// <param name="host">Host address for HTTP client.</param>
         public Client(string host)
         {
             _host = host;
         }
+
+        /// <inheritdoc/>
+        public event EventHandler<ErrorEventArgs> Error;
+
+        /// <inheritdoc/>
+        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+
+        /// <inheritdoc/>
+        public event EventHandler<MessageSentEventArgs> MessageSent;
+
+        /// <inheritdoc/>
+        public event EventHandler<CommandEventArgs> EventReceived;
 
         /// <summary>
         /// Connected.
         /// </summary>
         public bool Connected { get; private set; }
 
-        /// <summary>
-        /// The event that is raised when an unrecoverable error condition occurs.
-        /// </summary>
-        public event EventHandler<ErrorEventArgs> Error;
-
-        /// <summary>
-        /// The event that is raised when messages are received.
-        /// </summary>
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
-
-        /// <summary>
-        /// The event that is raised when messages are sent.
-        /// </summary>
-        public event EventHandler<MessageSentEventArgs> MessageSent;
-
-        /// <summary>
-        /// The event that is raised when and event is received from the Denon unit.
-        /// </summary>
-        public event EventHandler<Command> EventReceived;
-
-        /// <summary>
-        /// Send command to the Denon.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns>Awaitable Task.</returns>
+        /// <inheritdoc/>
         public async Task SendCommandAsync(Command command)
         {
             await FireAndForgetAsync(command).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Send command to the Denon.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns>The response.</returns>
+        /// <inheritdoc/>
         public async Task<Command> SendQueryAsync(Command command)
         {
             return await RequestResponseAsync(command).ConfigureAwait(false);
@@ -96,8 +86,7 @@ namespace I8Beef.Denon.TelnetClient
                         var command = CommandFactory.GetCommand(message);
                         if (command != null)
                         {
-                            TaskCompletionSource<Command> resultTaskCompletionSource;
-                            if (_resultTaskCompletionSources.TryGetValue(command.Code, out resultTaskCompletionSource))
+                            if (_resultTaskCompletionSources.TryGetValue(command.Code, out TaskCompletionSource<Command> resultTaskCompletionSource))
                             {
                                 // query response
                                 resultTaskCompletionSource.TrySetResult(command);
@@ -106,7 +95,7 @@ namespace I8Beef.Denon.TelnetClient
                             else
                             {
                                 // event
-                                EventReceived?.Invoke(this, command);
+                                EventReceived?.Invoke(this, new CommandEventArgs(command));
                             }
                         }
                     }
@@ -133,7 +122,7 @@ namespace I8Beef.Denon.TelnetClient
         /// </summary>
         /// <param name="command">The message to be sent.</param>
         /// <param name="timeout">Time to wait for an error response.</param>
-        /// <returns>A <see cref="cref="Task"/>.</returns>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         private async Task FireAndForgetAsync(Command command, int timeout = 50)
         {
             // Heartbeat check
@@ -289,12 +278,10 @@ namespace I8Beef.Denon.TelnetClient
         }
 
         /// <summary>
-		/// Releases all resources used by the current instance of the XmppIm
-		/// class, optionally disposing of managed resource.
-		/// </summary>
-		/// <param name="disposing">true to dispose of managed resources, otherwise
-		/// false.</param>
-		protected virtual void Dispose(bool disposing)
+        /// Releases all resources used by the current instance of the XmppIm class, optionally disposing of managed resource.
+        /// </summary>
+        /// <param name="disposing">true to dispose of managed resources, otherwise false.</param>
+        protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
             {
@@ -305,6 +292,7 @@ namespace I8Beef.Denon.TelnetClient
                 if (disposing)
                 {
                     Close();
+                    _cancellationTokenSource.Dispose();
                 }
             }
         }

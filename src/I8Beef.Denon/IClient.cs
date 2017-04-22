@@ -1,18 +1,16 @@
-﻿using I8Beef.Denon.Commands;
-using I8Beef.Denon.Events;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using I8Beef.Denon.Commands;
+using I8Beef.Denon.Events;
 
 namespace I8Beef.Denon
 {
+    /// <summary>
+    /// Denon client interface.
+    /// </summary>
     public interface IClient : IDisposable
     {
-        /// <summary>
-        /// Connected.
-        /// </summary>
-        bool Connected { get; }
-
         /// <summary>
         /// The event that is raised when an unrecoverable error condition occurs.
         /// </summary>
@@ -31,19 +29,24 @@ namespace I8Beef.Denon
         /// <summary>
         /// The event that is raised when and event is received from the Denon unit.
         /// </summary>
-        event EventHandler<Command> EventReceived;
+        event EventHandler<CommandEventArgs> EventReceived;
+
+        /// <summary>
+        /// Connected.
+        /// </summary>
+        bool Connected { get; }
 
         /// <summary>
         /// Send command to the Denon.
         /// </summary>
-        /// <param name="command"></param>
+        /// <param name="command">The <see cref="Command"/> to send.</param>
         /// <returns>Awaitable Task.</returns>
         Task SendCommandAsync(Command command);
 
         /// <summary>
         /// Send command to the Denon.
         /// </summary>
-        /// <param name="command"></param>
+        /// <param name="command">The <see cref="Command"/> to send.</param>
         /// <returns>The response.</returns>
         Task<Command> SendQueryAsync(Command command);
 

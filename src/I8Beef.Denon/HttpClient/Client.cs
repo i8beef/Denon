@@ -269,17 +269,8 @@ namespace I8Beef.Denon.HttpClient
         /// </summary>
         public void Close()
         {
-            if (Connected)
-            {
-                // Kill heartbeat
-                if (_refresh != null)
-                {
-                    _refresh.Stop();
-                    _refresh.Dispose();
-                }
-
-                Connected = false;
-            }
+            Connected = false;
+            Dispose();
         }
 
         /// <summary>
@@ -420,7 +411,6 @@ namespace I8Beef.Denon.HttpClient
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -431,14 +421,19 @@ namespace I8Beef.Denon.HttpClient
         {
             if (!_disposed)
             {
-                // Indicate that the instance has been disposed.
-                _disposed = true;
-
                 // Get rid of managed resources.
                 if (disposing)
                 {
-                    Close();
+                    // Kill heartbeat
+                    if (_refresh != null)
+                    {
+                        _refresh.Stop();
+                        _refresh.Dispose();
+                    }
                 }
+
+                // Indicate that the instance has been disposed.
+                _disposed = true;
             }
         }
 

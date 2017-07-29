@@ -73,46 +73,33 @@ namespace I8Beef.Denon.TelnetClient
         /// exception, the Error event is raised and the thread is shutdown.</remarks>
         private void ReadStream()
         {
-            try
+            using (var reader = new StreamReader(_stream))
             {
-                using (var reader = new StreamReader(_stream))
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
-                    while (!_cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        var message = reader.ReadLine();
-                        MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
+                    // If the client is not connected close reader.
+                    if (!_client.Connected)
+                        break;
 
-                        // Parse message
-                        var command = CommandFactory.GetCommand(message);
-                        if (command != null)
+                    var message = reader.ReadLine();
+                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
+
+                    // Parse message
+                    var command = CommandFactory.GetCommand(message);
+                    if (command != null)
+                    {
+                        if (_resultTaskCompletionSources.TryGetValue(command.Code, out TaskCompletionSource<Command> resultTaskCompletionSource))
                         {
-                            if (_resultTaskCompletionSources.TryGetValue(command.Code, out TaskCompletionSource<Command> resultTaskCompletionSource))
-                            {
-                                // query response
-                                resultTaskCompletionSource.TrySetResult(command);
-                                _resultTaskCompletionSources.Remove(command.Code);
-                            }
-                            else
-                            {
-                                // event
-                                EventReceived?.Invoke(this, new CommandEventArgs(command));
-                            }
+                            // query response
+                            resultTaskCompletionSource.TrySetResult(command);
+                            _resultTaskCompletionSources.Remove(command.Code);
+                        }
+                        else
+                        {
+                            // event
+                            EventReceived?.Invoke(this, new CommandEventArgs(command));
                         }
                     }
-                }
-            }
-            catch (Exception e)
-            {
-                // Happens naturally on Dispose()
-                if (e is IOException)
-                {
-                    Connected = false;
-                }
-
-                // An exception outside of Dispose should be raised to the caller to handle
-                if (!_disposed)
-                {
-                    Error?.Invoke(this, new ErrorEventArgs(e));
                 }
             }
         }
@@ -237,7 +224,14 @@ namespace I8Beef.Denon.TelnetClient
                 _stream = _client.GetStream();
 
             // Set up the listener task after authentication has been handled
-            Task.Factory.StartNew(ReadStream, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            Task.Factory.StartNew(ReadStream, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+                .ContinueWith(
+                task =>
+                {
+                    Error?.Invoke(this, new ErrorEventArgs(task.Exception));
+                    Close();
+                    throw task.Exception;
+                }, TaskContinuationOptions.OnlyOnFaulted);
 
             Connected = true;
         }
@@ -247,21 +241,8 @@ namespace I8Beef.Denon.TelnetClient
         /// </summary>
         public void Close()
         {
-            // Stop parsing incoming feed
-            _cancellationTokenSource.Cancel();
-
-            // Dispose of stream
-            if (_stream != null)
-                _stream.Dispose();
-
             Connected = false;
-
-            // Disconnect socket
-            if (_client != null)
-            {
-                _client.Close();
-                _client = null;
-            }
+            Dispose();
         }
 
         #endregion
@@ -274,7 +255,6 @@ namespace I8Beef.Denon.TelnetClient
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -285,15 +265,27 @@ namespace I8Beef.Denon.TelnetClient
         {
             if (!_disposed)
             {
-                // Indicate that the instance has been disposed.
-                _disposed = true;
-
                 // Get rid of managed resources.
                 if (disposing)
                 {
-                    Close();
+                    // Stop parsing incoming feed
+                    _cancellationTokenSource.Cancel();
                     _cancellationTokenSource.Dispose();
+
+                    // Dispose of stream
+                    if (_stream != null)
+                        _stream.Dispose();
+
+                    // Disconnect socket
+                    if (_client != null)
+                    {
+                        _client.Close();
+                        _client = null;
+                    }
                 }
+
+                // Indicate that the instance has been disposed.
+                _disposed = true;
             }
         }
 

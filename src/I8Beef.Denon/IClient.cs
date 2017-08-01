@@ -32,11 +32,6 @@ namespace I8Beef.Denon
         event EventHandler<CommandEventArgs> EventReceived;
 
         /// <summary>
-        /// Connected.
-        /// </summary>
-        bool Connected { get; }
-
-        /// <summary>
         /// Send command to the Denon.
         /// </summary>
         /// <param name="command">The <see cref="Command"/> to send.</param>

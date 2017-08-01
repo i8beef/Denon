@@ -45,9 +45,6 @@ namespace I8Beef.Denon.HttpClient
         public event EventHandler<CommandEventArgs> EventReceived;
 
         /// <inheritdoc/>
-        public bool Connected { get; private set; }
-
-        /// <inheritdoc/>
         public async Task SendCommandAsync(Command command)
         {
             await FireAndForgetAsync(command).ConfigureAwait(false);
@@ -260,8 +257,6 @@ namespace I8Beef.Denon.HttpClient
             _refresh.Elapsed += RefreshAsync;
             _refresh.Interval = _refreshInterval;
             _refresh.Start();
-
-            Connected = true;
         }
 
         /// <summary>
@@ -269,7 +264,6 @@ namespace I8Beef.Denon.HttpClient
         /// </summary>
         public void Close()
         {
-            Connected = false;
             Dispose();
         }
 

@@ -49,11 +49,6 @@ namespace I8Beef.Denon.TelnetClient
         /// <inheritdoc/>
         public event EventHandler<CommandEventArgs> EventReceived;
 
-        /// <summary>
-        /// Connected.
-        /// </summary>
-        public bool Connected { get; private set; }
-
         /// <inheritdoc/>
         public async Task SendCommandAsync(Command command)
         {
@@ -113,7 +108,7 @@ namespace I8Beef.Denon.TelnetClient
         private async Task FireAndForgetAsync(Command command, int timeout = 50)
         {
             // Heartbeat check
-            if (!Connected)
+            if (!_client.Connected)
                 throw new ConnectionException("Connection already closed or not authenticated");
 
             // Prepare the TaskCompletionSource, which is used to await the result
@@ -132,7 +127,7 @@ namespace I8Beef.Denon.TelnetClient
                 _resultTaskCompletionSources.Remove(command.Code);
 
                 // This makes sure the exception, if there was one, is unwrapped
-                await task;
+                await task.ConfigureAwait(false);
             }
         }
 
@@ -144,7 +139,7 @@ namespace I8Beef.Denon.TelnetClient
         /// <returns>Response message.</returns>
         private async Task<Command> RequestResponseAsync(Command command, int timeout = 2000)
         {
-            if (!Connected)
+            if (!_client.Connected)
                 throw new ConnectionException("Connection already closed or not authenticated");
 
             // Prepate the TaskCompletionSource, which is used to await the result
@@ -202,7 +197,7 @@ namespace I8Beef.Denon.TelnetClient
                 }
                 catch
                 {
-                    Connected = false;
+                    Close();
                     throw;
                 }
             }
@@ -226,14 +221,12 @@ namespace I8Beef.Denon.TelnetClient
             // Set up the listener task after authentication has been handled
             Task.Factory.StartNew(ReadStream, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
                 .ContinueWith(
-                task =>
-                {
-                    Error?.Invoke(this, new ErrorEventArgs(task.Exception));
-                    Close();
-                    throw task.Exception;
-                }, TaskContinuationOptions.OnlyOnFaulted);
-
-            Connected = true;
+                    task =>
+                    {
+                        Error?.Invoke(this, new ErrorEventArgs(task.Exception));
+                        Close();
+                        throw task.Exception;
+                    }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         /// <summary>
@@ -241,7 +234,6 @@ namespace I8Beef.Denon.TelnetClient
         /// </summary>
         public void Close()
         {
-            Connected = false;
             Dispose();
         }
 

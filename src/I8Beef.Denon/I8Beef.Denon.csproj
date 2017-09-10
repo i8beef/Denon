@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>I8Beef.Denon</RootNamespace>
     <AssemblyName>I8Beef.Denon</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -67,6 +68,7 @@
     <Compile Include="Commands\PowerCommand.cs" />
     <Compile Include="Events\CommandEventArgs.cs" />
     <Compile Include="IClient.cs" />
+    <Compile Include="TelnetClient\StreamReaderExtensions.cs" />
     <Compile Include="TelnetClient\TelnetCommand.cs" />
     <Compile Include="Events\MessageReceivedEventArgs.cs" />
     <Compile Include="Events\MessageSentEventArgs.cs" />

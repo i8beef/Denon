@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using I8Beef.Denon.Commands;
 
@@ -33,10 +34,9 @@ namespace I8Beef.Denon.TestClient
 
             using (var client = GetClient(clientType, host))
             {
-                /*
-                client.MessageSent += (o, e) => { Console.WriteLine("Message sent: " + e.Message); };
-                client.MessageReceived += (o, e) => { Console.WriteLine("Message received: " + e.Message); };
-                */
+                client.MessageSent += (o, e) => { Debug.WriteLine("Message sent: " + e.Message); };
+                client.MessageReceived += (o, e) => { Debug.WriteLine("Message received: " + e.Message); };
+
                 client.EventReceived += (o, e) => { Console.WriteLine($"Event received: {e.GetType()} {e.Command.Code} {e.Command.Value}"); };
 
                 client.Connect();

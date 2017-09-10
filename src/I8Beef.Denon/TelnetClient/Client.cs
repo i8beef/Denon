@@ -76,8 +76,8 @@ namespace I8Beef.Denon.TelnetClient
                     if (!_client.Connected)
                         break;
 
-                    var message = reader.ReadLine();
-                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
+                    var message = reader.ReadLineSingleBreak();
+                    MessageReceived?.BeginInvoke(this, new MessageReceivedEventArgs(message), null, null);
 
                     // Parse message
                     var command = CommandFactory.GetCommand(message);
@@ -87,12 +87,11 @@ namespace I8Beef.Denon.TelnetClient
                         {
                             // query response
                             resultTaskCompletionSource.TrySetResult(command);
-                            _resultTaskCompletionSources.Remove(command.Code);
                         }
                         else
                         {
                             // event
-                            EventReceived?.Invoke(this, new CommandEventArgs(command));
+                            EventReceived?.BeginInvoke(this, new CommandEventArgs(command), null, null);
                         }
                     }
                 }
@@ -112,7 +111,7 @@ namespace I8Beef.Denon.TelnetClient
                 throw new ConnectionException("Connection already closed or not authenticated");
 
             // Prepare the TaskCompletionSource, which is used to await the result
-            var resultTaskCompletionSource = new TaskCompletionSource<Command>();
+            var resultTaskCompletionSource = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!_resultTaskCompletionSources.ContainsKey(command.Code))
             {
                 _resultTaskCompletionSources[command.Code] = resultTaskCompletionSource;
@@ -143,7 +142,7 @@ namespace I8Beef.Denon.TelnetClient
                 throw new ConnectionException("Connection already closed or not authenticated");
 
             // Prepate the TaskCompletionSource, which is used to await the result
-            var resultTaskCompletionSource = new TaskCompletionSource<Command>();
+            var resultTaskCompletionSource = new TaskCompletionSource<Command>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!_resultTaskCompletionSources.ContainsKey(command.Code))
             {
                 _resultTaskCompletionSources[command.Code] = resultTaskCompletionSource;
@@ -162,7 +161,12 @@ namespace I8Beef.Denon.TelnetClient
                 using (cancellationTokenSource.Token.Register(timeoutAction))
                 {
                     // Await until response or timeout
-                    return await resultTaskCompletionSource.Task.ConfigureAwait(false);
+                    var result = await resultTaskCompletionSource.Task.ConfigureAwait(false);
+
+                    // Remove the result task, as we no longer need it.
+                    _resultTaskCompletionSources.Remove(command.Code);
+
+                    return result;
                 }
             }
 

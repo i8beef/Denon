@@ -1,110 +1,35 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2613D905-5F91-4A60-B262-513B30933BCD}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>I8Beef.Denon</RootNamespace>
-    <AssemblyName>I8Beef.Denon</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageLicenseUrl>https://github.com/i8beef/Denon/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/i8beef/Denon</PackageProjectUrl>
+    <PackageTags>Denon Marantz</PackageTags>
+    <Copyright>Copyright © 2016</Copyright>
+    <Description>A library for interacting with Denon receivers.</Description>
+    <Company>Michael Hallock</Company>
+    <Authors>Michael Hallock</Authors>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.0.0</Version>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet />
-    <DocumentationFile>bin\Debug\I8Beef.Denon.xml</DocumentationFile>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\I8Beef.Denon.xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet />
-    <DocumentationFile>bin\Release\I8Beef.Denon.xml</DocumentationFile>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\I8Beef.Denon.xml</DocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
   </PropertyGroup>
-  <PropertyGroup Label="I8Beef.CodeAnalysis.RuleSet">
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>$(SolutionDir)packages/I8Beef.CodeAnalysis.RuleSet.1.0.9/tools/I8Beef.CodeAnalysis.RuleSet.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="I8Beef.CodeAnalysis.RuleSet" Version="1.0.15">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Commands\CommandFactory.cs" />
-    <Compile Include="Commands\ZoneCommand.cs" />
-    <Compile Include="Commands\Command.cs" />
-    <Compile Include="Commands\MenuCommand.cs" />
-    <Compile Include="Commands\ZoneVolumeCommand.cs" />
-    <Compile Include="Commands\ZoneMuteCommand.cs" />
-    <Compile Include="Commands\ZoneInputCommand.cs" />
-    <Compile Include="Commands\ZonePowerCommand.cs" />
-    <Compile Include="Commands\TunerModeCommand.cs" />
-    <Compile Include="Commands\TunerFrequencyCommand.cs" />
-    <Compile Include="Commands\SurroundModeCommand.cs" />
-    <Compile Include="Commands\InputCommand.cs" />
-    <Compile Include="Commands\VolumeCommand.cs" />
-    <Compile Include="Commands\MuteCommand.cs" />
-    <Compile Include="Commands\PowerCommand.cs" />
-    <Compile Include="Events\CommandEventArgs.cs" />
-    <Compile Include="IClient.cs" />
-    <Compile Include="TelnetClient\StreamReaderExtensions.cs" />
-    <Compile Include="TelnetClient\TelnetCommand.cs" />
-    <Compile Include="Events\MessageReceivedEventArgs.cs" />
-    <Compile Include="Events\MessageSentEventArgs.cs" />
-    <Compile Include="Exceptions\ConnectionException.cs" />
-    <Compile Include="Exceptions\UnrecognizedMessageException.cs" />
-    <Compile Include="HttpClient\Client.cs" />
-    <Compile Include="HttpClient\MainStatus.cs" />
-    <Compile Include="HttpClient\StatusLite.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="HttpClient\Schema\DeviceInfo\DeviceInfo.cs" />
-    <Compile Include="HttpClient\Schema\MainZoneStatus\MainZoneStatus.cs" />
-    <Compile Include="HttpClient\Schema\SecondaryZoneStatus\SecondaryZoneStatus.cs" />
-    <Compile Include="HttpClient\Schema\Status\Status.cs" />
-    <Compile Include="TelnetClient\Client.cs" />
-    <Compile Include="HttpClient\XmlSerializer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="I8Beef.Denon.nuspec" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.1\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
-    <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.1\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
-    <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.1\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="$(SolutionDir)packages/I8Beef.CodeAnalysis.RuleSet.1.0.9/tools/stylecop.json" Label="I8Beef.CodeAnalysis.RuleSet">
-      <Link>stylecop.json</Link>
-    </AdditionalFiles>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

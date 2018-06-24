@@ -54,7 +54,7 @@ namespace I8Beef.Denon.HttpClient
         public async Task<Command> SendQueryAsync(Command command)
         {
             if (_status == null)
-                await RefreshStatus().ConfigureAwait(false);
+                await RefreshStatusAsync().ConfigureAwait(false);
 
             if (command is PowerCommand)
                 return new PowerCommand { Value = _status.Power ? "ON" : "OFF" };
@@ -106,7 +106,7 @@ namespace I8Beef.Denon.HttpClient
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.DeviceInfo.Device_Info> GetDenonDeviceInfo()
+        private async Task<Schema.DeviceInfo.Device_Info> GetDenonDeviceInfoAsync()
         {
             using (var client = new System.Net.Http.HttpClient())
             {
@@ -131,7 +131,7 @@ namespace I8Beef.Denon.HttpClient
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.Status.Item> GetDenonStatus()
+        private async Task<Schema.Status.Item> GetDenonStatusAsync()
         {
             using (var client = new System.Net.Http.HttpClient())
             {
@@ -156,7 +156,7 @@ namespace I8Beef.Denon.HttpClient
         /// Returns the actual deserialized XML object from the Denon unit.
         /// </remarks>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.MainZoneStatus.Item> GetDenonMainZoneStatus()
+        private async Task<Schema.MainZoneStatus.Item> GetDenonMainZoneStatusAsync()
         {
             using (var client = new System.Net.Http.HttpClient())
             {
@@ -182,12 +182,12 @@ namespace I8Beef.Denon.HttpClient
         /// </remarks>
         /// <param name="zoneCount">Number of secondary zones to try and fetch (default 1).</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<IDictionary<int, Schema.SecondaryZoneStatus.Item>> GetAllDenonSecondaryZonesStatus(int zoneCount = 1)
+        private async Task<IDictionary<int, Schema.SecondaryZoneStatus.Item>> GetAllDenonSecondaryZonesStatusAsync(int zoneCount = 1)
         {
             var result = new Dictionary<int, Schema.SecondaryZoneStatus.Item>();
             for (var i = 2; i <= zoneCount + 1; i++)
             {
-                result.Add(i, await GetDenonSecondaryZonesStatus(i).ConfigureAwait(false));
+                result.Add(i, await GetDenonSecondaryZonesStatusAsync(i).ConfigureAwait(false));
             }
 
             return result;
@@ -201,7 +201,7 @@ namespace I8Beef.Denon.HttpClient
         /// </remarks>
         /// <param name="zoneId">Zone ID to fetch status for.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.SecondaryZoneStatus.Item> GetDenonSecondaryZonesStatus(int zoneId)
+        private async Task<Schema.SecondaryZoneStatus.Item> GetDenonSecondaryZonesStatusAsync(int zoneId)
         {
             using (var client = new System.Net.Http.HttpClient())
             {
@@ -277,7 +277,7 @@ namespace I8Beef.Denon.HttpClient
         {
             try
             {
-                await RefreshStatus(true).ConfigureAwait(false);
+                await RefreshStatusAsync(true).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -292,13 +292,13 @@ namespace I8Beef.Denon.HttpClient
         /// </summary>
         /// <param name="publishChanges">Indiactes if changes should be published or not.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task RefreshStatus(bool publishChanges = false)
+        private async Task RefreshStatusAsync(bool publishChanges = false)
         {
             // Make all of the calls to get current status
             var status = new MainStatus();
 
-            var mainZoneStatusTask = GetDenonMainZoneStatus();
-            var secondaryZoneStatusTask = GetAllDenonSecondaryZonesStatus(1);
+            var mainZoneStatusTask = GetDenonMainZoneStatusAsync();
+            var secondaryZoneStatusTask = GetAllDenonSecondaryZonesStatusAsync(1);
             await Task.WhenAll(mainZoneStatusTask, secondaryZoneStatusTask).ConfigureAwait(false);
 
             var mainZoneStatus = await mainZoneStatusTask.ConfigureAwait(false);

@@ -77,7 +77,7 @@ namespace I8Beef.Denon.TelnetClient
                         break;
 
                     var message = reader.ReadLineSingleBreak();
-                    MessageReceived?.BeginInvoke(this, new MessageReceivedEventArgs(message), null, null);
+                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
 
                     // Parse message
                     var command = CommandFactory.GetCommand(message);
@@ -91,7 +91,7 @@ namespace I8Beef.Denon.TelnetClient
                         else
                         {
                             // event
-                            EventReceived?.BeginInvoke(this, new CommandEventArgs(command), null, null);
+                            EventReceived?.Invoke(this, new CommandEventArgs(command));
                         }
                     }
                 }

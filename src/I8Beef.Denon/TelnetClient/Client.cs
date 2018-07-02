@@ -218,6 +218,9 @@ namespace I8Beef.Denon.TelnetClient
             if (_client == null)
                 _client = new TcpClient(_host, 23);
 
+            // Setup keepalive
+            _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+
             // Get stream handle
             if (_stream == null)
                 _stream = _client.GetStream();

@@ -19,12 +19,11 @@ namespace I8Beef.Denon.TelnetClient
     {
         // A lookup to correlate request and responses
         private readonly IDictionary<string, TaskCompletionSource<Command>> _resultTaskCompletionSources = new ConcurrentDictionary<string, TaskCompletionSource<Command>>();
-
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly object _writeLock = new object();
-        private bool _disposed;
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private readonly string _host;
 
-        private string _host;
+        private bool _disposed;
         private TcpClient _client;
         private NetworkStream _stream;
 
@@ -50,15 +49,15 @@ namespace I8Beef.Denon.TelnetClient
         public event EventHandler<CommandEventArgs> EventReceived;
 
         /// <inheritdoc/>
-        public async Task SendCommandAsync(Command command)
+        public async Task SendCommandAsync(Command command, CancellationToken cancellationToken = default)
         {
-            await FireAndForgetAsync(command).ConfigureAwait(false);
+            await FireAndForgetAsync(command, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
-        public async Task<Command> SendQueryAsync(Command command)
+        public async Task<Command> SendQueryAsync(Command command, CancellationToken cancellationToken = default)
         {
-            return await RequestResponseAsync(command).ConfigureAwait(false);
+            return await RequestResponseAsync(command, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -103,8 +102,9 @@ namespace I8Beef.Denon.TelnetClient
         /// </summary>
         /// <param name="command">The message to be sent.</param>
         /// <param name="timeout">Time to wait for an error response.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task FireAndForgetAsync(Command command, int timeout = 50)
+        private async Task FireAndForgetAsync(Command command, int timeout = 50, CancellationToken cancellationToken = default)
         {
             // Heartbeat check
             if (!_client.Connected)
@@ -120,7 +120,7 @@ namespace I8Beef.Denon.TelnetClient
                 Send(command.GetTelnetCommand());
 
                 // Await, to make sure there wasn't an error
-                var task = await Task.WhenAny(resultTaskCompletionSource.Task, Task.Delay(timeout)).ConfigureAwait(false);
+                var task = await Task.WhenAny(resultTaskCompletionSource.Task, Task.Delay(timeout, cancellationToken)).ConfigureAwait(false);
 
                 // Remove the result task, as we no longer need it.
                 _resultTaskCompletionSources.Remove(command.Code);
@@ -135,8 +135,9 @@ namespace I8Beef.Denon.TelnetClient
         /// </summary>
         /// <param name="command">The message to be sent.</param>
         /// <param name="timeout">Timeout for the response, exception thrown on expiration.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Response message.</returns>
-        private async Task<Command> RequestResponseAsync(Command command, int timeout = 2000)
+        private async Task<Command> RequestResponseAsync(Command command, int timeout = 2000, CancellationToken cancellationToken = default)
         {
             if (!_client.Connected)
                 throw new ConnectionException("Connection already closed or not authenticated");

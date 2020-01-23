@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using I8Beef.Denon.Commands;
 using I8Beef.Denon.Events;
@@ -35,15 +36,17 @@ namespace I8Beef.Denon
         /// Send command to the Denon.
         /// </summary>
         /// <param name="command">The <see cref="Command"/> to send.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Awaitable Task.</returns>
-        Task SendCommandAsync(Command command);
+        Task SendCommandAsync(Command command, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Send command to the Denon.
         /// </summary>
         /// <param name="command">The <see cref="Command"/> to send.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The response.</returns>
-        Task<Command> SendQueryAsync(Command command);
+        Task<Command> SendQueryAsync(Command command, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Connect to Denon.

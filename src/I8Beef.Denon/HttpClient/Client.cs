@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using I8Beef.Denon.Commands;
 using I8Beef.Denon.Events;
+using Timer = System.Timers.Timer;
 
 namespace I8Beef.Denon.HttpClient
 {
@@ -13,13 +15,12 @@ namespace I8Beef.Denon.HttpClient
     /// </summary>
     public class Client : IClient
     {
+        private readonly IDenonHttpClient _httpClient;
+        private readonly int _refreshInterval;
+
         private bool _disposed;
-        private string _host;
-
         private MainStatus _status;
-
         private Timer _refresh;
-        private int _refreshInterval;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
@@ -28,8 +29,10 @@ namespace I8Beef.Denon.HttpClient
         /// <param name="refreshInterval">Refresh interval for client.</param>
         public Client(string host, int refreshInterval = 30000)
         {
-            _host = host;
             _refreshInterval = refreshInterval;
+            _httpClient = new DenonHttpClient(host);
+            _httpClient.MessageReceived += MessageReceived;
+            _httpClient.MessageSent += MessageSent;
         }
 
         /// <inheritdoc/>
@@ -45,16 +48,16 @@ namespace I8Beef.Denon.HttpClient
         public event EventHandler<CommandEventArgs> EventReceived;
 
         /// <inheritdoc/>
-        public async Task SendCommandAsync(Command command)
+        public Task SendCommandAsync(Command command, CancellationToken cancellationToken = default)
         {
-            await FireAndForgetAsync(command).ConfigureAwait(false);
+            return _httpClient.FireAndForgetAsync(command, cancellationToken);
         }
 
         /// <inheritdoc/>
-        public async Task<Command> SendQueryAsync(Command command)
+        public async Task<Command> SendQueryAsync(Command command, CancellationToken cancellationToken = default)
         {
             if (_status == null)
-                await RefreshStatusAsync().ConfigureAwait(false);
+                await RefreshStatusAsync(false).ConfigureAwait(false);
 
             if (command is PowerCommand)
                 return new PowerCommand { Value = _status.Power ? "ON" : "OFF" };
@@ -96,151 +99,6 @@ namespace I8Beef.Denon.HttpClient
 
             return null;
         }
-
-        #region Denon Queries
-
-        /// <summary>
-        /// Gets device info.
-        /// </summary>
-        /// <remarks>
-        /// Returns the actual deserialized XML object from the Denon unit.
-        /// </remarks>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.DeviceInfo.Device_Info> GetDenonDeviceInfoAsync()
-        {
-            using (var client = new System.Net.Http.HttpClient())
-            {
-                var request = "http://" + _host + "/goform/Deviceinfo.xml";
-                var response = await client.GetAsync(request).ConfigureAwait(false);
-                MessageSent?.Invoke(this, new MessageSentEventArgs(request));
-
-                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
-
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                    throw new Exception("Invalid status code received: " + response.StatusCode);
-
-                return XmlSerializer<Schema.DeviceInfo.Device_Info>.Deserialize(responseString);
-            }
-        }
-
-        /// <summary>
-        /// Gets the main device status.
-        /// </summary>
-        /// <remarks>
-        /// Returns the actual deserialized XML object from the Denon unit.
-        /// </remarks>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.Status.Item> GetDenonStatusAsync()
-        {
-            using (var client = new System.Net.Http.HttpClient())
-            {
-                var request = "http://" + _host + "/goform/formMainZone_MainZoneXml.xml";
-                var response = await client.GetAsync(request).ConfigureAwait(false);
-                MessageSent?.Invoke(this, new MessageSentEventArgs(request));
-
-                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
-
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                    throw new Exception("Invalid status code received: " + response.StatusCode);
-
-                return XmlSerializer<Schema.Status.Item>.Deserialize(responseString);
-            }
-        }
-
-        /// <summary>
-        /// Gets main zone status.
-        /// </summary>
-        /// <remarks>
-        /// Returns the actual deserialized XML object from the Denon unit.
-        /// </remarks>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.MainZoneStatus.Item> GetDenonMainZoneStatusAsync()
-        {
-            using (var client = new System.Net.Http.HttpClient())
-            {
-                var request = "http://" + _host + "/goform/formMainZone_MainZoneXmlStatus.xml";
-                var response = await client.GetAsync(request).ConfigureAwait(false);
-                MessageSent?.Invoke(this, new MessageSentEventArgs(request));
-
-                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
-
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                    throw new Exception("Invalid status code received: " + response.StatusCode);
-
-                return XmlSerializer<Schema.MainZoneStatus.Item>.Deserialize(responseString);
-            }
-        }
-
-        /// <summary>
-        /// Gets all secondary zone status.
-        /// </summary>
-        /// <remarks>
-        /// Returns the actual deserialized XML object from the Denon unit.
-        /// </remarks>
-        /// <param name="zoneCount">Number of secondary zones to try and fetch (default 1).</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<IDictionary<int, Schema.SecondaryZoneStatus.Item>> GetAllDenonSecondaryZonesStatusAsync(int zoneCount = 1)
-        {
-            var result = new Dictionary<int, Schema.SecondaryZoneStatus.Item>();
-            for (var i = 2; i <= zoneCount + 1; i++)
-            {
-                result.Add(i, await GetDenonSecondaryZonesStatusAsync(i).ConfigureAwait(false));
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Gets secondary zone status.
-        /// </summary>
-        /// <remarks>
-        /// Returns the actual deserialized XML object from the Denon unit.
-        /// </remarks>
-        /// <param name="zoneId">Zone ID to fetch status for.</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task<Schema.SecondaryZoneStatus.Item> GetDenonSecondaryZonesStatusAsync(int zoneId)
-        {
-            using (var client = new System.Net.Http.HttpClient())
-            {
-                var request = "http://" + _host + string.Format("/goform/formZone{0}_Zone{0}XmlStatusLite.xml", zoneId);
-                var response = await client.GetAsync(request).ConfigureAwait(false);
-                MessageSent?.Invoke(this, new MessageSentEventArgs(request));
-
-                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
-
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                    throw new Exception("Invalid status code received: " + response.StatusCode);
-
-                return XmlSerializer<Schema.SecondaryZoneStatus.Item>.Deserialize(responseString);
-            }
-        }
-
-        /// <summary>
-        /// Sends specified command to the device.
-        /// </summary>
-        /// <param name="command">The command URL to execute (unformatted)</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        private async Task FireAndForgetAsync(Command command)
-        {
-            using (var client = new System.Net.Http.HttpClient())
-            {
-                var request = "http://" + _host + "/" + string.Format(command.GetHttpCommand());
-                var response = await client.GetAsync(request).ConfigureAwait(false);
-                MessageSent?.Invoke(this, new MessageSentEventArgs(request));
-
-                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(responseString));
-
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                    throw new Exception("Invalid status code received: " + response.StatusCode);
-            }
-        }
-
-        #endregion
 
         #region Connection management
 
@@ -297,8 +155,8 @@ namespace I8Beef.Denon.HttpClient
             // Make all of the calls to get current status
             var status = new MainStatus();
 
-            var mainZoneStatusTask = GetDenonMainZoneStatusAsync();
-            var secondaryZoneStatusTask = GetAllDenonSecondaryZonesStatusAsync(1);
+            var mainZoneStatusTask = _httpClient.GetDenonMainZoneStatusAsync();
+            var secondaryZoneStatusTask = _httpClient.GetAllDenonSecondaryZonesStatusAsync(1);
             await Task.WhenAll(mainZoneStatusTask, secondaryZoneStatusTask).ConfigureAwait(false);
 
             var mainZoneStatus = await mainZoneStatusTask.ConfigureAwait(false);

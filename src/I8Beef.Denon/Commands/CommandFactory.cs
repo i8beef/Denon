@@ -45,6 +45,9 @@ namespace I8Beef.Denon.Commands
                 if (Regex.Match(commandString, @"^Z\d(ON|OFF|\?)$").Success)
                     return ZonePowerCommand.Parse(commandString);
 
+                if (Regex.Match(commandString, @"^ZM(ON|OFF|\?)$").Success)
+                    return ZoneMainCommand.Parse(commandString);
+
                 if (Regex.Match(commandString, @"^Z\d(UP|DOWN|\d\d)$").Success)
                     return ZoneVolumeCommand.Parse(commandString);
 

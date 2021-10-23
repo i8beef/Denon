@@ -1,7 +1,7 @@
 # I8Beef.Denon
 
-[![Build status](https://ci.appveyor.com/api/projects/status/3yigyj4fe01leceq/branch/release?svg=true)](https://ci.appveyor.com/project/i8beef/denon/branch/release)
-[![Build status](https://ci.appveyor.com/api/projects/status/3yigyj4fe01leceq/branch/master?svg=true)](https://ci.appveyor.com/project/i8beef/denon/branch/master)
+![Build](https://github.com/i8beef/Denon/actions/workflows/build.yml/badge.svg?branch=master)
+![Release](https://github.com/i8beef/Denon/actions/workflows/release.yml/badge.svg)
 
 I8Beef.Denon is a library for interacting with Denon receivers.
 

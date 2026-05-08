@@ -16,22 +16,26 @@ namespace I8Beef.Denon.TelnetClient
         /// <returns>Read line.</returns>
         public static string ReadLineSingleBreak(this StreamReader self)
         {
-            StringBuilder currentLine = new StringBuilder();
-            int i;
-            char c;
-            while ((i = self.Read()) >= 0)
+            var currentLine = new StringBuilder();
+
+            while (true)
             {
-                c = (char)i;
-                if (c == '\r'
-                    || c == '\n')
+                var i = self.Read();
+
+                if (i < 0)
                 {
-                    break;
+                    return currentLine.Length == 0 ? null : currentLine.ToString();
+                }
+
+                var c = (char)i;
+
+                if (c == '\r' || c == '\n')
+                {
+                    return currentLine.ToString();
                 }
 
                 currentLine.Append(c);
             }
-
-            return currentLine.ToString();
         }
     }
 }

@@ -26,7 +26,7 @@ namespace I8Beef.Denon.TestClient
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public static async Task MainAsync(string[] args)
         {
-            var host = "192.168.1.117";
+            var host = "192.168.1.33";
 
             Console.Write("Use (H)TTP client or (T)CP client? ");
             var clientType = Console.ReadKey().KeyChar;

@@ -1,11 +1,15 @@
 name: release
+
 on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
 
+permissions:
+  contents: write
+
 env:
-  DOTNETVERSION: "5.0.x"
+  DOTNETVERSION: "8.0.x"
   APP: "I8Beef.Denon"
   SOLUTION: "./src/I8Beef.Denon.sln"
   BUILDOUTPUTPATH: "./src/I8Beef.Denon/bin/Release/netstandard2.0"
@@ -14,85 +18,47 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          ref: master
           fetch-depth: 0
 
-      - name: Setup .NET Core SDK ${{ env.DOTNETVERSION }}
-        uses: actions/setup-dotnet@v1.7.2
+      - name: Setup .NET SDK ${{ env.DOTNETVERSION }}
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNETVERSION }}
 
-      - name: Get version
-        id: version
-        uses: battila7/get-version-action@v2
-
-      - name: Get previous release tag
-        id: previousTag
-        uses: sammcoe/get-previous-release-action@v1.0.3
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: dotnet restore ${{ env.SOLUTION }}
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION }} --configuration Release --no-restore /p:Version=${{ steps.version.outputs.version-without-v }}
+        run: dotnet build ${{ env.SOLUTION }} --configuration Release --no-restore /p:Version=${{ env.VERSION }}
 
       - name: Test
         run: dotnet test ${{ env.SOLUTION }} --no-restore --verbosity normal --logger trx --results-directory "TestResults"
 
-      - name: Upload app build artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.APP }}-${{ steps.version.outputs.version-without-v }}
-          path: ${{ env.BUILDOUTPUTPATH }}
-
-      - name: Upload TestResults build artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: TestResults
-          path: TestResults
-
-      - name: Build changelog
-        id: gitLog
-        uses: jarrodparkes/git-log-action@1.0.0
-        with:
-          start: ${{ steps.previousTag.outputs.tag }}
-          end: ${{ github.ref }}
+      - name: ZIP release artifact
+        run: zip -r ${{ env.APP }}-${{ env.VERSION }}.zip ${{ env.BUILDOUTPUTPATH }}
 
       - name: GitHub release
-        uses: actions/create-release@v1
-        id: release
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            "${{ env.APP }}-${{ env.VERSION }}.zip" \
+            --title "${{ env.VERSION }}" \
+            --generate-notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_name: ${{ steps.version.outputs.version-without-v }}
-          tag_name: ${{ github.ref }}
-          body: ${{ env.LOG }}
-          draft: false
-          prerelease: false
-
-      - name: ZIP release artifact
-        run: zip -r ${{ env.APP }}-${{ steps.version.outputs.version-without-v }}.zip ${{ env.BUILDOUTPUTPATH }}
-
-      - name: GitHub release assets
-        uses: actions/upload-release-asset@v1
-        id: release_assets
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ${{ env.APP }}-${{ steps.version.outputs.version-without-v }}.zip
-          asset_name: ${{ env.APP }}-${{ steps.version.outputs.version-without-v }}.zip
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: NuGet pack
-        run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-restore --include-symbols /p:Version=${{ steps.version.outputs.version-without-v }} -o ${{ env.PACKOUTPUTPATH }}
+        run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-restore --include-symbols /p:Version=${{ env.VERSION }} -o ${{ env.PACKOUTPUTPATH }}
 
       - name: Upload NuGet build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP }} NuGet Packages
           path: ${{ env.PACKOUTPUTPATH }}

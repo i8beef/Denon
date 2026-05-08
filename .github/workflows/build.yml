@@ -1,4 +1,5 @@
 name: build
+
 on:
   push:
     branches:
@@ -8,7 +9,7 @@ on:
       - "**"
 
 env:
-  DOTNETVERSION: "5.0.x"
+  DOTNETVERSION: "8.0.x"
   APP: "I8Beef.Denon"
   SOLUTION: "./src/I8Beef.Denon.sln"
   BUILDOUTPUTPATH: "./src/I8Beef.Denon/bin/Release/netstandard2.0"
@@ -16,12 +17,13 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Setup .NET Core SDK ${{ env.DOTNETVERSION }}
-        uses: actions/setup-dotnet@v1.7.2
+      - name: Setup .NET SDK ${{ env.DOTNETVERSION }}
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNETVERSION }}
 
@@ -31,17 +33,17 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.SOLUTION }} --configuration Release --no-restore
 
+      - name: Test
+        run: dotnet test ${{ env.SOLUTION }} --no-restore --verbosity normal --logger trx --results-directory "TestResults"
+
       - name: Upload app build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP }}
           path: ${{ env.BUILDOUTPUTPATH }}
 
-      - name: Test
-        run: dotnet test ${{ env.SOLUTION }} --no-restore --verbosity normal --logger trx --results-directory "TestResults"
-
       - name: Upload TestResults build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: TestResults
           path: TestResults

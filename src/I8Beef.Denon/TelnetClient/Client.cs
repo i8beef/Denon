@@ -26,6 +26,7 @@ namespace I8Beef.Denon.TelnetClient
         private bool _disposed;
         private TcpClient _client;
         private NetworkStream _stream;
+        private Task _readTask;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Client"/> class.
@@ -67,33 +68,61 @@ namespace I8Beef.Denon.TelnetClient
         /// exception, the Error event is raised and the thread is shutdown.</remarks>
         private void ReadStream()
         {
-            using (var reader = new StreamReader(_stream))
+            try
             {
-                while (!_cancellationTokenSource.Token.IsCancellationRequested)
+                using (var reader = new StreamReader(_stream))
                 {
-                    // If the client is not connected close reader.
-                    if (!_client.Connected)
-                        break;
-
-                    var message = reader.ReadLineSingleBreak();
-                    MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
-
-                    // Parse message
-                    var command = CommandFactory.GetCommand(message);
-                    if (command != null)
+                    while (!_cancellationTokenSource.Token.IsCancellationRequested)
                     {
-                        if (_resultTaskCompletionSources.TryGetValue(command.Code, out TaskCompletionSource<Command> resultTaskCompletionSource))
+                        var message = reader.ReadLineSingleBreak();
+
+                        // EOF / remote disconnect. Do not keep looping on empty strings.
+                        if (message == null)
                         {
-                            // query response
-                            resultTaskCompletionSource.TrySetResult(command);
+                            break;
                         }
-                        else
+
+                        if (message.Length == 0)
                         {
-                            // event
-                            EventReceived?.Invoke(this, new CommandEventArgs(command));
+                            continue;
+                        }
+
+                        MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
+
+                        var command = CommandFactory.GetCommand(message);
+
+                        if (command != null)
+                        {
+                            if (_resultTaskCompletionSources.TryGetValue(command.Code, out TaskCompletionSource<Command> resultTaskCompletionSource))
+                            {
+                                resultTaskCompletionSource.TrySetResult(command);
+                            }
+                            else
+                            {
+                                EventReceived?.Invoke(this, new CommandEventArgs(command));
+                            }
                         }
                     }
                 }
+            }
+            catch (ObjectDisposedException) when (_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+            }
+            catch (IOException ex)
+            {
+                Error?.Invoke(this, new ErrorEventArgs(ex));
+            }
+            catch (SocketException ex)
+            {
+                Error?.Invoke(this, new ErrorEventArgs(ex));
+            }
+            catch (Exception ex)
+            {
+                Error?.Invoke(this, new ErrorEventArgs(ex));
+            }
+            finally
+            {
+                Close();
             }
         }
 
@@ -215,26 +244,25 @@ namespace I8Beef.Denon.TelnetClient
         /// </summary>
         public void Connect()
         {
-            // Establish a connection
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(Client));
+
+            if (_readTask != null && !_readTask.IsCompleted)
+                return;
+
             if (_client == null)
                 _client = new TcpClient(_host, 23);
 
-            // Setup keepalive
             _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
-            // Get stream handle
             if (_stream == null)
                 _stream = _client.GetStream();
 
-            // Set up the listener task after authentication has been handled
-            Task.Factory.StartNew(ReadStream, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
-                .ContinueWith(
-                    task =>
-                    {
-                        Error?.Invoke(this, new ErrorEventArgs(task.Exception));
-                        Close();
-                        throw task.Exception;
-                    }, TaskContinuationOptions.OnlyOnFaulted);
+            _readTask = Task.Factory.StartNew(
+                ReadStream,
+                _cancellationTokenSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
         }
 
         /// <summary>
